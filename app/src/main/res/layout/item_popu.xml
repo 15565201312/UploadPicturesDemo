@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    android:layout_gravity="center"
+    android:background="@drawable/set"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+
+    <TextView
+        android:id="@+id/text_pai"
+        android:padding="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="拍照"
+        android:textSize="22dp"
+        android:layout_margin="8dp"
+        android:textColor="#4d0"
+        android:layout_gravity="center"/>
+    <TextView
+        android:id="@+id/text_xiang"
+        android:padding="5dp"
+        android:textSize="22dp"
+        android:layout_margin="8dp"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#4d0"
+        android:text="            从相册选择"/>
+
+
+    <TextView
+        android:id="@+id/text_no"
+        android:padding="5dp"
+        android:textSize="22dp"
+        android:textColor="#4d0"
+        android:layout_margin="8dp"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="取消"/>
+
+</LinearLayout>
