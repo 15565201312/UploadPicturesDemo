@@ -29,9 +29,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import jp.wasabeef.glide.transformations.CropCircleTransformation;
 import jp.wasabeef.glide.transformations.CropSquareTransformation;
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
 
 public class MainActivity extends AppCompatActivity {
     private final int IMAGE_REQUEST_CODE = 0;
@@ -43,6 +53,11 @@ public class MainActivity extends AppCompatActivity {
     private final int CUT_PHOTO=2;
     private final int TAKE_PHOTO=1;
     private File file;
+    private static final MediaType MEDIA_TYPE_PNG = MediaType.parse("image/png");
+    private  int a=1;
+    private final OkHttpClient client = new OkHttpClient();
+    private List<String> mImgUrls=new ArrayList<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,7 +85,7 @@ public class MainActivity extends AppCompatActivity {
                         Intent it = new Intent();
                         it.setAction(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                        file = new File(Environment.getExternalStorageDirectory().getPath(), "h3.jpg");
+                        file = new File(Environment.getExternalStorageDirectory().getPath(), "h"+(++a)+".png");
                         imageUri = Uri.fromFile(file);
                         // 以键值对的形式告诉系统照片保存的地址，键的名称不能随便写
                         it.putExtra(MediaStore.EXTRA_OUTPUT, imageUri);
@@ -130,6 +145,13 @@ public class MainActivity extends AppCompatActivity {
                             .load(data.getData())
                             .bitmapTransform(new CropCircleTransformation(this))
                             .into(img);
+
+                //使用工具类拿到本机相册
+                String realPathFromUri = RealPathFromUriUtils.getRealPathFromUri(this, data.getData());
+                System.out.println("------------1>"+realPathFromUri);
+
+                mImgUrls.add(realPathFromUri);
+                uploadImg();
                     window.dismiss();
                 break;
             case TAKE_PHOTO:
@@ -157,7 +179,11 @@ public class MainActivity extends AppCompatActivity {
 
                 // 裁剪完程序后，将图片显示在屏幕上
                 Bitmap bitmap = BitmapFactory.decodeFile(file.getPath());
-               img.setImageBitmap(bitmap);
+                img.setImageBitmap(bitmap);
+                //拍照的图片上传
+                mImgUrls.add(file.getPath());
+
+                uploadImg();
               /*  Glide.with(this)
                         .load(bitmap)
                         .bitmapTransform(new CropCircleTransformation(this))
@@ -180,6 +206,60 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(intent, RESIZE_REQUEST_CODE);
     }
 
+
+    private void uploadImg() {
+
+        // mImgUrls为存放图片的url集合
+
+      //  mImgUrls.add(Environment.getExternalStorageDirectory().getAbsolutePath()+"/a.png");
+
+        MultipartBody.Builder builder = new MultipartBody.Builder().setType(MultipartBody.FORM);
+        for (int i = 0; i < mImgUrls.size(); i++) {
+            File f = new File(mImgUrls.get(i));
+            if (f != null) {
+                builder.addFormDataPart("img", f.getName(), RequestBody.create(MEDIA_TYPE_PNG, f));
+            }
+        }
+
+        //添加其它信息
+//        builder.addFormDataPart("time",takePicTime);
+//        builder.addFormDataPart("mapX", SharedInfoUtils.getLongitude());
+//        builder.addFormDataPart("mapY",SharedInfoUtils.getLatitude());
+//        builder.addFormDataPart("name",SharedInfoUtils.getUserName());
+
+
+        MultipartBody requestBody = builder.build();
+        //构建请求
+        Request request = new Request.Builder()
+                .url("http://192.168.0.107:8080/UploadDemo4/UploadFile")//地址
+                .post(requestBody)//添加请求体
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+
+                System.out.println("上传失败:e.getLocalizedMessage() = " + e.getLocalizedMessage());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+
+                System.out.println("上传照片成功：response = " + response.body().string());
+
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MainActivity.this, "上传成功", Toast.LENGTH_LONG).show();
+
+
+                    }
+                });
+            }
+        });
+
     }
+
+}
 
 
